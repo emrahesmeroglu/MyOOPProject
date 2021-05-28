@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Business.Constants;
+using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Concrete.DTOs;
@@ -17,21 +19,48 @@ namespace Business.Concrete
         public ProductManager(IProductDal productDal)
         {
             _productDal = productDal;
-        }    
-        public List<Product> GetAll()
-        {
-            return _productDal.GetAll();
         }
 
-        public List<Product> GetAllByCategoryId(int id)
+        public IResult Add(Product product)
         {
+            //Business Codes
 
-            return _productDal.GetAll(p => p.CategoryId == id);
+            if(product.ProductName.Length<2)
+            {
+                return new ErrorResult(Messages.ProductNameInvalid);
+            }
+            _productDal.Add(product);
+            return new Result(true,Messages.ProductAdded);
         }
 
-        public List<ProductDetailDto> GetProductDetails()
+        public IDataResult<List<Product>> GetAll()
         {
-            return _productDal.GetProductDetails();
+            if(DateTime.Now.Hour==22)
+            {
+                return new ErrorDataResult<List<Product>>(Messages.InvalidRequestTime);
+            }
+            return  new SuccessDataResult<List<Product>>(_productDal.GetAll());
+        }
+
+        public IDataResult<List<Product>> GetAllByCategoryId(int id)
+        {
+
+            return new SuccessDataResult<List<Product>>(_productDal.GetAll(p => p.CategoryId == id));
+        }
+
+        public IDataResult<Product> GetById(int productId)
+        {
+            return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == productId));
+        }
+
+        public IDataResult<List<ProductDetailDto>> GetProductDetails()
+        {
+            return new SuccessDataResult<List<ProductDetailDto>>(_productDal.GetProductDetails(),"");
+        }
+        
+        public IDataResult<List<Product>> GetByUnitPrice(decimal min, decimal max)
+        {
+            throw new NotImplementedException();
         }
     }
 }
